@@ -7,8 +7,11 @@
 # Packages required
 library(shiny)
 library(readr)
+library(stringr)
 library(ggplot2)
 library(dplyr)
+
+survey <- read_csv("../data/survey.csv")
 
 
 # Define UI for application that draws a scatterplot
@@ -45,9 +48,7 @@ ui <- fluidPage(
     
     # Show explanation and scatterplot
     mainPanel(
-      h4("My well-being indicator consists of GDP per capita and life expectancy. Countries in the upper right corner are properous and healthy, while countries in the lower left corner are less so"),
-      
-      plotOutput("scatterPlot")
+      plotOutput("treatmentPlot")
     )
   )
 )
@@ -55,26 +56,14 @@ ui <- fluidPage(
 # Define server logic required to draw a scatterplot
 server <- function(input, output) {
   
-
-  survey <- read_csv("../data/survey.csv")
-
   
-  output$scatterPlot <- renderPlot({
-    p<-gapminder %>%
-      filter(year >= input$yearSlider[1],
-             year <= input$yearSlider[2],
-             continent == input$continentInput) %>%
-      ggplot(aes(x=lifeExp, y=gdpPercap, color = continent))+
-      geom_point(alpha=input$tranSlider, size = input$sizeSlider)+
-      scale_y_continuous(name="GDP per Capita (USD)",labels=scales::dollar_format()) +
-      scale_x_continuous(name="Life Expectancy (years)")+
-      ggtitle("Global GDP per Capita and Life Expectancy")
+  output$treatmentPlot <- renderPlot({
+    t<-survey %>%
+      ggplot(aes(x=treatment, color = Gender))+
+      geom_bar()
+
     
-    if (input$trendCheck){
-      p<-p + geom_path()
-    }
-    
-    print(p)
+    print(t)
     
   })
 }
