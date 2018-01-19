@@ -12,6 +12,19 @@ library(ggplot2)
 library(dplyr)
 
 survey <- read_csv("../data/survey.csv")
+# Data wrangling
+survey$Gender<-gsub("\\<f\\>","Female",survey$Gender)
+survey$Gender<-gsub("\\<F\\>","Female",survey$Gender)
+survey$Gender<-gsub("\\<female\\>","Female",survey$Gender)
+survey$Gender<-gsub("\\<woman\\>","Female",survey$Gender)
+survey$Gender<-gsub("\\<Woman\\>","Female",survey$Gender)
+
+survey$Gender<-gsub("\\<m\\>","Male",survey$Gender)
+survey$Gender<-gsub("\\<M\\>","Male",survey$Gender)
+survey$Gender<-gsub("\\<male\\>","Male",survey$Gender)
+
+survey<-survey%>%
+  filter(Gender == c("Female", "Male"))
 
 
 # Define UI for application that draws a scatterplot
@@ -58,7 +71,17 @@ server <- function(input, output) {
   
   
   output$treatmentPlot <- renderPlot({
-    t<-survey %>%
+    
+    data<-survey %>%
+      select(input$programInput,Gender,tech_company,Age, treatment)
+    
+    if (input$techCheck){
+      data<-data %>%
+        filter(tech_company == "Yes")
+    }
+
+    
+    t<-data %>%
       ggplot(aes(x=treatment, color = Gender))+
       geom_bar()
 
