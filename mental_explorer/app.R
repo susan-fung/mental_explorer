@@ -1,8 +1,7 @@
 # Created by Susan Fung, January 2018
 #
 # Description:
-# Interactive visualization that shows the global well-being using GDP per capita and life expectancy. 
-
+# Interactive visualization that shows percentage of respondents that claim they have sought mental health treatment
 
 # Packages required
 library(shiny)
@@ -11,8 +10,11 @@ library(stringr)
 library(ggplot2)
 library(dplyr)
 
+# Read data
 survey <- read_csv("../data/survey.csv")
-# Data wrangling
+
+
+# Clean-up gender data
 survey$Gender<-gsub("\\<f\\>","Female",survey$Gender)
 survey$Gender<-gsub("\\<F\\>","Female",survey$Gender)
 survey$Gender<-gsub("\\<female\\>","Female",survey$Gender)
@@ -48,22 +50,10 @@ ui <- fluidPage(
                          selected = c("1-5", "6-25", "26-100", "100-500", "500-1000", "More than 1000")),
       
       # Single checkbox to select tech companies
-      checkboxInput('techCheck', 'Show Tech Companies Only'),
-      
-      # Checkbox Group to filter by program 
-      checkboxGroupInput("programInput", "Programs",
-                         choices = c("Remote Work" = "remote_work",
-                                     "Mental Health Benefits" = "benefits",
-                                     "Self-help resources" = "seek_help",
-                                     "Anonymity" = "anonymity"),
-                         selected = c("Remote Work" = "remote_work",
-                                      "Mental Health Benefits" = "benefits",
-                                      "Self-help resources" = "seek_help",
-                                      "Anonymity" = "anonymity"))
-    ),
+      checkboxInput('techCheck', 'Show Tech Companies Only')
+  ),    
     
-    
-    # Show explanation and scatterplot
+    # Show bar chat
     mainPanel(
       plotOutput("treatmentPlot")
     )
@@ -88,18 +78,17 @@ server <- function(input, output) {
   })
   
   output$treatmentPlot <- renderPlot({
-    
     t<-filtered() %>%
       filter(treatment =="Yes")%>%
       ggplot(aes(x=age_group, fill = Gender))+
       coord_flip() +
-      geom_bar(position = "fill")
+      geom_bar(position = "fill")+
+      xlab("Age Group")+
+      ylab("Percentage")+
+      ggtitle("Percentage of Respondents Who Had Sought Mental Health Treatment")
     
     print(t)
-    
   })
-  
-  
   
   
 }
