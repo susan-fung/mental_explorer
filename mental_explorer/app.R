@@ -23,8 +23,13 @@ survey$Gender<-gsub("\\<m\\>","Male",survey$Gender)
 survey$Gender<-gsub("\\<M\\>","Male",survey$Gender)
 survey$Gender<-gsub("\\<male\\>","Male",survey$Gender)
 
+# Create age group
+survey$age_group <- as.character(cut(survey$Age, breaks = c(20,30,40,50,60,Inf),
+                                     labels=c('20-29', '30-39', '40-49', '50-59', 'Over 60')))
+
 survey<-survey%>%
-  filter(Gender %in% c("Female", "Male"))
+  filter(Gender %in% c("Female", "Male"))%>%
+  filter(!is.na(age_group))
 
 
 # Define UI for application that draws a scatterplot
@@ -36,7 +41,7 @@ ui <- fluidPage(
   # Sidebar with 4 controls 
   sidebarLayout(
     sidebarPanel(
-
+      
       # Checkbox Group to filter by company size 
       checkboxGroupInput("sizeInput", "Company Size",
                          choices = c("1-5", "6-25", "26-100", "100-500", "500-1000", "More than 1000"),
@@ -71,13 +76,13 @@ server <- function(input, output) {
   filtered <- reactive({
     if (input$techCheck){
       survey %>%
-        select(Gender,tech_company,Age,treatment, no_employees)%>%
+        select(Gender,tech_company,age_group,treatment, no_employees)%>%
         filter(no_employees %in% input$sizeInput)%>%
         filter(tech_company == "Yes")
     }
     else{
       survey %>%
-        select(Gender,tech_company,Age,treatment, no_employees)%>%
+        select(Gender,tech_company,age_group,treatment, no_employees)%>%
         filter(no_employees %in% input$sizeInput)
     }
   })
@@ -85,14 +90,19 @@ server <- function(input, output) {
   output$treatmentPlot <- renderPlot({
     
     t<-filtered() %>%
-      ggplot(aes(x=treatment, color = Gender))+
-      geom_bar()
+      filter(treatment =="Yes")%>%
+      ggplot(aes(x=age_group, fill = Gender))+
+      coord_flip() +
+      geom_bar(position = "fill")
     
     print(t)
     
   })
+  
+  
+  
+  
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
