@@ -24,7 +24,7 @@ survey$Gender<-gsub("\\<M\\>","Male",survey$Gender)
 survey$Gender<-gsub("\\<male\\>","Male",survey$Gender)
 
 survey<-survey%>%
-  filter(Gender == c("Female", "Male"))
+  filter(Gender %in% c("Female", "Male"))
 
 
 # Define UI for application that draws a scatterplot
@@ -46,7 +46,7 @@ ui <- fluidPage(
       checkboxInput('techCheck', 'Show Tech Companies Only'),
       
       # Checkbox Group to filter by program 
-      checkboxGroupInput("programInput", "Program",
+      checkboxGroupInput("programInput", "Programs",
                          choices = c("Remote Work" = "remote_work",
                                      "Mental Health Benefits" = "benefits",
                                      "Self-help resources" = "seek_help",
@@ -55,7 +55,6 @@ ui <- fluidPage(
                                       "Mental Health Benefits" = "benefits",
                                       "Self-help resources" = "seek_help",
                                       "Anonymity" = "anonymity"))
-
     ),
     
     
@@ -69,22 +68,25 @@ ui <- fluidPage(
 # Define server logic required to draw a scatterplot
 server <- function(input, output) {
   
+  filtered <- reactive({
+    if (input$techCheck){
+      survey %>%
+        select(Gender,tech_company,Age,treatment, no_employees)%>%
+        filter(no_employees %in% input$sizeInput)%>%
+        filter(tech_company == "Yes")
+    }
+    else{
+      survey %>%
+        select(Gender,tech_company,Age,treatment, no_employees)%>%
+        filter(no_employees %in% input$sizeInput)
+    }
+  })
   
   output$treatmentPlot <- renderPlot({
     
-    data<-survey %>%
-      select(input$programInput,Gender,tech_company,Age, treatment)
-    
-    if (input$techCheck){
-      data<-data %>%
-        filter(tech_company == "Yes")
-    }
-
-    
-    t<-data %>%
+    t<-filtered() %>%
       ggplot(aes(x=treatment, color = Gender))+
       geom_bar()
-
     
     print(t)
     
