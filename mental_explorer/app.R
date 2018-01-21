@@ -1,7 +1,7 @@
 # Created by Susan Fung, January 2018
 #
 # Description:
-# Interactive visualization that shows percentage of respondents that claim they have sought mental health treatment
+# Interactive visualization that shows mental health treatment and attitude in the workplace
 
 # Packages required
 library(shiny)
@@ -9,6 +9,8 @@ library(readr)
 library(stringr)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
+
 
 # Read data
 survey <- read_csv("../data/survey.csv")
@@ -40,7 +42,7 @@ ui <- fluidPage(
   # Application title
   titlePanel("Mental Health Explorer"),
   
-  # Sidebar with 4 controls 
+  # Sidebar with 2 controls 
   sidebarLayout(
     sidebarPanel(
       
@@ -53,39 +55,58 @@ ui <- fluidPage(
       checkboxInput('techCheck', 'Show Tech Companies Only')
   ),    
     
-    # Show bar chat
+    # Show bar charts
     mainPanel(
-      plotOutput("treatmentPlot")
+      plotOutput("treatmentPlot"),
+      plotOutput("attitudePlot")
     )
   )
 )
 
-# Define server logic required to draw a scatterplot
+
 server <- function(input, output) {
   
+  # Reactivity to filter data based on user input
   filtered <- reactive({
     if (input$techCheck){
       survey %>%
-        select(Gender,tech_company,age_group,treatment, no_employees)%>%
         filter(no_employees %in% input$sizeInput)%>%
         filter(tech_company == "Yes")
     }
     else{
       survey %>%
-        select(Gender,tech_company,age_group,treatment, no_employees)%>%
         filter(no_employees %in% input$sizeInput)
     }
   })
   
+  # Bar chart that shows the percentage of respondents who had sought treatment
   output$treatmentPlot <- renderPlot({
     t<-filtered() %>%
-      filter(treatment =="Yes")%>%
-      ggplot(aes(x=age_group, fill = Gender))+
+      ggplot(aes(x=age_group, fill = treatment))+
       coord_flip() +
       geom_bar(position = "fill")+
       xlab("Age Group")+
       ylab("Percentage")+
-      ggtitle("Percentage of Respondents Who Had Sought Mental Health Treatment")
+      facet_wrap(~Gender)+
+      ggtitle("Mental Health Treatment")+
+      scale_colour_brewer(palette = "Pastel1")
+    
+    print(t)
+  })
+  
+  # Bar chart that shows the attitude towards mental health illness
+  output$attitudePlot <- renderPlot({
+    t<-filtered() %>%
+      select(coworkers, supervisor, obs_consequence)%>%
+      gather(attitude, Response)%>%
+      ggplot(aes(x=attitude, fill = Response))+
+      coord_flip() +
+      geom_bar(position = "fill")+
+      scale_x_discrete(labels = c("Will you talk to your supervisors?","Have you observed any negative consequences?", "Will you talk to your coworkers?"))+
+      ylab("Percentage")+
+      xlab("")+
+      ggtitle("Attitude towards Mental Health Illness")+
+      scale_colour_brewer(palette = "Pastel1")
     
     print(t)
   })

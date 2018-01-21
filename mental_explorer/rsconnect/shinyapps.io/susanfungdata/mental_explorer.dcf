@@ -1,0 +1,12 @@
+name: mental_explorer
+title: mental_explorer
+username:
+account: susanfungdata
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 258656
+bundleId: 1184197
+url: https://susanfungdata.shinyapps.io/mental_explorer/
+when: 1516431587.42774
+asMultiple: FALSE
+asStatic: FALSE
