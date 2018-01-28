@@ -53,6 +53,8 @@ ui <- fluidPage(
       
       # Single checkbox to select tech companies
       checkboxInput('techCheck', 'Show Tech Companies Only')
+      
+      
   ),    
     
     # Show bar charts
@@ -81,16 +83,21 @@ server <- function(input, output) {
   
   # Bar chart that shows the percentage of respondents who had sought treatment
   output$treatmentPlot <- renderPlot({
-    t<-filtered() %>%
-      ggplot(aes(x=age_group, fill = treatment))+
-      coord_flip() +
-      geom_bar(position = "fill")+
+    df<-filtered() %>% 
+        group_by(age_group, Gender, treatment)%>%
+        summarise(n = n())%>%
+        mutate(prob = n/sum(n)) %>%
+        filter(treatment == "Yes")
+      
+    t<-df %>%
+      ggplot(aes(x=age_group, y = prob, fill = Gender))+
+      geom_bar(data = subset(df, Gender %in% "Female"), stat = "summary", fun.y="mean")+
+      geom_bar(data = subset(df, Gender %in% "Male"), aes(y = -prob), stat = "summary", fun.y="mean") +
+      coord_flip()+
+      scale_fill_manual(name="Gender",values=c("Female"="darkorange", "Male"="blue1"))+
       xlab("Age Group")+
       ylab("Percentage")+
-      facet_wrap(~Gender)+
-      ggtitle("Mental Health Treatment")+
-      scale_colour_brewer(palette = "Pastel1")
-    
+      ggtitle("Percentage of Respondents Who Had Sought Mental Health Treatment")
     print(t)
   })
   
