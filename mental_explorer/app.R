@@ -35,6 +35,13 @@ survey<-survey%>%
   filter(Gender %in% c("Female", "Male"))%>%
   filter(!is.na(age_group))
 
+# Recode attitude
+survey$coworkers[survey$coworkers == "Some of them"]<-"Yes"
+survey$supervisor[survey$supervisor == "Some of them"]<-"Yes"
+survey$obs_consequence[survey$obs_consequence == "Yes"]<-"temp"
+survey$obs_consequence[survey$obs_consequence == "No"]<-"Yes"
+survey$obs_consequence[survey$obs_consequence == "temp"]<-"No"
+
 
 # Define UI for application that draws a scatterplot
 ui <- fluidPage(
@@ -98,6 +105,7 @@ server <- function(input, output) {
       xlab("Age Group")+
       ylab("Percentage")+
       ggtitle("Percentage of Respondents Who Had Sought Mental Health Treatment")
+    
     print(t)
   })
   
@@ -109,11 +117,11 @@ server <- function(input, output) {
       ggplot(aes(x=attitude, fill = Response))+
       coord_flip() +
       geom_bar(position = "fill")+
-      scale_x_discrete(labels = c("Will you talk to your supervisors?","Have you observed any negative consequences?", "Will you talk to your coworkers?"))+
+      scale_x_discrete(labels = c("I will talk to my supervisors","I will talk to my coworkers", "I have not observed any negative consequences"))+
       ylab("Percentage")+
       xlab("")+
       ggtitle("Attitude towards Mental Health Illness")+
-      scale_colour_brewer(palette = "Pastel1")
+      scale_fill_manual(name = "Response", values = c("Yes"="olivedrab3", "No"="orangered2"))
     
     print(t)
   })
